@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import localFont from "next/font/local";
+import Script from "next/script";
 
 const wantedSans = localFont({
   src: "./fonts/WantedSansVariable.woff2",
@@ -26,6 +27,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-K7JXT4ZP5E"
+        ></Script>
+        <Script>{`window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-K7JXT4ZP5E');
+        `}</Script>
+      </head>
       <body className={wantedSans.variable}>{children}</body>
     </html>
   );
