@@ -1,103 +1,171 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import EmojiInput from "@/components/EmojiInput";
+import GradientControl from "@/components/GradientControl";
+import ImagePreview from "@/components/ImagePreview";
+import {
+  generateColorsFromEmoji,
+  emojiToImageUrl,
+} from "@/utils/emojiToCanvas";
+import { generateImage } from "@/utils/imageGenerator";
+import Link from "next/link";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const [colors, setColors] = useState<[string, string]>([
+    "#3498db",
+    "#2980b9",
+  ]);
+  const [gradientAngle, setGradientAngle] = useState<number>(45);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [emojiImageUrl, setEmojiImageUrl] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const handleEmojiSelect = async (emoji: string) => {
+    setSelectedEmoji(emoji);
+    setIsGenerating(true);
+
+    try {
+      const extractedColors = generateColorsFromEmoji(emoji);
+      setColors(extractedColors);
+
+      const newEmojiImageUrl = emojiToImageUrl(emoji);
+      setEmojiImageUrl(newEmojiImageUrl);
+
+      const newImageUrl = await generateImage(
+        newEmojiImageUrl,
+        extractedColors,
+        gradientAngle
+      );
+      setImageUrl(newImageUrl);
+    } catch (error) {
+      console.error("Failed to generate image from emoji:", error);
+      alert(
+        "Failed to generate image from emoji. Please try again with a different emoji."
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAngleChange = async (newAngle: number) => {
+    setGradientAngle(newAngle);
+    setIsGenerating(true);
+
+    try {
+      if (emojiImageUrl) {
+        const newImageUrl = await generateImage(
+          emojiImageUrl,
+          colors,
+          newAngle
+        );
+        setImageUrl(newImageUrl);
+      }
+    } catch (error) {
+      console.error("Failed to update gradient angle:", error);
+      alert("Failed to update gradient angle. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleColorChange = async (index: number, newColor: string) => {
+    const newColors: [string, string] = [...colors] as [string, string];
+    newColors[index] = newColor;
+    setColors(newColors);
+    setIsGenerating(true);
+
+    try {
+      if (emojiImageUrl) {
+        const newImageUrl = await generateImage(
+          emojiImageUrl,
+          newColors,
+          gradientAngle
+        );
+        setImageUrl(newImageUrl);
+      }
+    } catch (error) {
+      console.error("Failed to update gradient color:", error);
+      alert(
+        "Failed to update gradient color. Please try again with a different color."
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-white">
+      <div className="container mx-auto px-4 py-10 max-w-4xl">
+        <header className="mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2">Thumbnail Generator</h1>
+          <p className="text-sm text-gray-500 max-w-xl mx-auto">
+            Enter an emoji and adjust the gradient to create a
+            <span className="inline-flex items-center mx-1 font-mono">
+              1920×1080
+            </span>
+            thumbnail
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <EmojiInput
+              onEmojiSelect={handleEmojiSelect}
+              selectedEmoji={selectedEmoji}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+
+            {selectedEmoji && (
+              <GradientControl
+                colors={colors}
+                angle={gradientAngle}
+                onAngleChange={handleAngleChange}
+                onColorChange={handleColorChange}
+              />
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <ImagePreview
+              imageUrl={imageUrl}
+              isGenerating={isGenerating}
+              emojiUrl={emojiImageUrl}
+              colors={colors}
+              gradientAngle={gradientAngle}
+            />
+
+            {imageUrl && (
+              <div className="app-card p-4">
+                <h3 className="text-xs font-medium uppercase mb-2 tracking-wide">
+                  Thumbnail Info
+                </h3>
+                <ul className="text-xs text-gray-600 space-y-1">
+                  <li className="flex items-center">
+                    <span className="w-16 text-gray-500">Resolution:</span>
+                    <span className="font-mono">1920 × 1080</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-16 text-gray-500">Format:</span>
+                    <span className="font-mono">PNG</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-16 text-gray-500">Emoji:</span>
+                    <span>{selectedEmoji}</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <footer className="mt-12 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
+          <p>
+            Copyright ⓒ 2025 <Link href="https://sid12g.dev">sid12g</Link> All
+            rights reserved.
+          </p>
+        </footer>
+      </div>
+    </main>
   );
 }
