@@ -161,8 +161,11 @@ export default function Home() {
 
         <footer className="mt-12 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
           <p>
-            Copyright ⓒ 2025 <Link href="https://sid12g.dev">sid12g</Link> All
-            rights reserved.
+            Copyright ⓒ 2025{" "}
+            <Link href="https://github.com/SID12g/thumbnail-generator">
+              sid12g
+            </Link>{" "}
+            All rights reserved.
           </p>
         </footer>
       </div>
