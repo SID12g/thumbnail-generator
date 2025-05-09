@@ -32,7 +32,7 @@ export default function RootLayout({
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-K7JXT4ZP5E"
         ></Script>
-        <Script>{`window.dataLayer = window.dataLayer || [];
+        <Script id="google-tag-management">{`window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-K7JXT4ZP5E');
